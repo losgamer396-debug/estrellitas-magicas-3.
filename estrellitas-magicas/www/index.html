@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#77d8fa">
+<title>Estrellitas Mágicas</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial,sans-serif;background:#f4f8ff;color:#26334a}
+main{max-width:520px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+header{text-align:center}h1{font-size:27px;margin:4px;color:#7b4bc4}header p{margin:0;color:#667085}
+.panel{background:white;border-radius:18px;padding:13px;box-shadow:0 3px 12px #20305012}
+h2{font-size:16px;margin:0 0 10px}.choices{display:flex;gap:8px;justify-content:space-between}
+.choice{border:2px solid #e5e7eb;background:#fff;border-radius:13px;padding:8px;flex:1;font-size:27px;cursor:pointer}
+.choice.selected{border-color:#e8b83f;background:#fff5cc}
+.worlds .choice{font-size:14px;font-weight:700;padding:11px 3px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stat{background:white;border-radius:14px;padding:9px 4px}.stat small{display:block;color:#667085;font-size:11px}.stat strong{font-size:23px}
+#field{height:340px;border-radius:20px;position:relative;overflow:hidden;background:linear-gradient(#80d9fa 0%,#c7f2ff 59%,#8be18d 60%,#42b96c 100%);touch-action:manipulation}
+#sun{position:absolute;right:18px;top:12px;font-size:40px}#cloud{position:absolute;left:18px;top:48px;font-size:34px}
+#mascot{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:76px;z-index:2}
+#message{position:absolute;top:10px;left:8px;right:8px;text-align:center;color:white;font-size:19px;font-weight:900;text-shadow:0 2px 4px #356}
+.star{position:absolute;width:58px;height:58px;border:0;border-radius:50%;background:#fff4c4;box-shadow:0 4px 0 #e0ad32;font-size:35px;z-index:3;cursor:pointer}
+#instruction{text-align:center;font-weight:700;min-height:24px}
+button#start{border:0;border-radius:15px;background:#efc448;color:#49370c;padding:15px;font-size:17px;font-weight:900;cursor:pointer}
+footer{text-align:center;color:#778196;font-size:11px}
+</style>
+</head>
+<body>
+<main>
+<header><div style="font-size:30px">✨ 🌈 ⭐</div><h1>Estrellitas Mágicas</h1><p>¡Elegí tu compañero de aventuras!</p></header>
+<section class="panel"><h2>🐾 Elegí tu animalito</h2><div class="choices" id="animals">
+<button class="choice selected" data-animal="🦊">🦊</button><button class="choice" data-animal="🐻">🐻</button><button class="choice" data-animal="🐰">🐰</button><button class="choice" data-animal="🐼">🐼</button><button class="choice" data-animal="🐸">🐸</button>
+</div></section>
+<section class="panel worlds"><h2>🌎 Elegí un mundo</h2><div class="choices" id="worlds">
+<button class="choice selected" data-world="forest">🌳 Bosque</button><button class="choice" data-world="sea">🌊 Océano</button><button class="choice" data-world="space">🚀 Espacio</button>
+</div><p id="world-note" style="font-size:12px;color:#667085;margin:8px 0 0">Un bosque mágico lleno de estrellas.</p></section>
+<div class="stats"><div class="stat"><small>⭐ PUNTOS</small><strong id="score">0</strong></div><div class="stat"><small>⏱️ TIEMPO</small><strong id="time">30</strong></div><div class="stat"><small>🏆 NIVEL</small><strong id="level">1</strong></div></div>
+<div id="field"><div id="sun">☀️</div><div id="cloud">☁️</div><div id="mascot">🦊</div><div id="message">¡Hola, explorador!</div></div>
+<div id="instruction">Tocá COMENZAR y atrapá las estrellas.</div>
+<button id="start">▶ ¡COMENZAR AVENTURA!</button>
+<footer>Juego infantil · Sin anuncios · Sin compras</footer>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);let animal='🦊',world='forest',score=0,time=30,level=1,active=false,tick=null,spawner=null;
+let best=Number(localStorage.getItem('em-best')||0);
+const themes={forest:{bg:'linear-gradient(#80d9fa 0%,#c7f2ff 59%,#8be18d 60%,#42b96c 100%)',icon:'☀️',note:'Un bosque mágico lleno de estrellas.'},sea:{bg:'linear-gradient(#69d6f0 0%,#c2f6ff 59%,#38b8d2 60%,#167cae 100%)',icon:'🐠',note:'El océano mágico esconde tesoros brillantes.'},space:{bg:'linear-gradient(#27275f 0%,#574a9b 60%,#292b71 61%,#171943 100%)',icon:'🪐',note:'¡Viajá al espacio y atrapá estrellas!'}};
+function update(){$('score').textContent=score;$('time').textContent=time;$('level').textContent=level}
+function clearStars(){document.querySelectorAll('.star').forEach(e=>e.remove())}
+function sound(freq=660){try{let ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=freq;g.gain.setValueAtTime(.08,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.16);o.start();o.stop(ctx.currentTime+.17)}catch(e){}}
+function spawn(){if(!active)return;clearStars();let el=document.createElement('button');el.className='star';el.textContent='⭐';el.setAttribute('aria-label','Atrapar estrella');let f=$('field');el.style.left=Math.random()*Math.max(0,f.clientWidth-65)+'px';el.style.top=(65+Math.random()*145)+'px';el.onclick=()=>{if(!active)return;score++;level=1+Math.floor(score/5);sound(650+score*15);update();$('message').textContent=['¡Muy bien! 🎉','¡Excelente! 🌟','¡Qué campeón! 💛','¡Seguí así! ✨'][Math.floor(Math.random()*4)];$('mascot').style.transform='translateX(-50%) scale(1.18)';setTimeout(()=>$('mascot').style.transform='translateX(-50%)',180);el.remove();spawn()};f.appendChild(el)}
+function finish(){active=false;clearInterval(tick);clearInterval(spawner);clearStars();$('message').textContent='¡Aventura completada! 🏆';$('instruction').textContent='¡Conseguiste '+score+' estrellas! ¡Felicitaciones!';$('start').textContent='↻ JUGAR OTRA VEZ';if(score>best){best=score;localStorage.setItem('em-best',best)}sound(880)}
+document.querySelectorAll('[data-animal]').forEach(b=>b.onclick=()=>{if(active)return;animal=b.dataset.animal;document.querySelectorAll('[data-animal]').forEach(x=>x.classList.toggle('selected',x===b));$('mascot').textContent=animal;sound(500)});
+document.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>{if(active)return;world=b.dataset.world;document.querySelectorAll('[data-world]').forEach(x=>x.classList.toggle('selected',x===b));$('field').style.background=themes[world].bg;$('sun').textContent=themes[world].icon;$('world-note').textContent=themes[world].note;sound(550)});
+$('start').onclick=()=>{clearInterval(tick);clearInterval(spawner);clearStars();score=0;time=30;level=1;active=true;update();$('mascot').textContent=animal;$('message').textContent='¡A atrapar estrellas!';$('instruction').textContent='Tocá las estrellas que aparecen en el escenario.';$('start').textContent='⭐ ¡AVENTURA EN CURSO!';spawn();spawner=setInterval(spawn,1250);tick=setInterval(()=>{time--;update();if(time<=0)finish()},1000)};
+})();
+</script>
+</body></html>

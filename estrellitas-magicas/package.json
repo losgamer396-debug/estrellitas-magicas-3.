@@ -1,0 +1,14 @@
+{
+  "name": "estrellitas-magicas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Juego infantil Estrellitas Mágicas",
+  "scripts": {
+    "build": "echo 'Los archivos del juego ya están en www/'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  }
+}
